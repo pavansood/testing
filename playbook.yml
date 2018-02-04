@@ -7,6 +7,7 @@
 #  pre_tasks:
 #     - name: Update yum cache if needed
 #       yum: update_cache=yes
+#       Commenting another line for testing
 
   handlers:
      - name: restart solr
