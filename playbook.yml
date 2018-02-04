@@ -1,0 +1,45 @@
+---
+- hosts: databases
+  become: yes
+  vars_files:
+  - vars.yml
+
+#  pre_tasks:
+#     - name: Update yum cache if needed
+#       yum: update_cache=yes
+
+  handlers:
+     - name: restart solr
+       service: name=solr state=restarted
+
+  tasks:
+     - name: Install Java
+       yum: name=java-1.8.0-openjdk.x86_64 state=latest
+  
+     - name: Download Solr
+       get_url:
+          url: "https://archive.apache.org/dist/lucene/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
+          dest: "{{ download_dir }}/solr-{{ solr_version }}.tgz"
+#          checksum: "{{ solr_checksum }}"
+
+     - name: Expand Solr
+       unarchive:
+          src: "{{ download_dir }}/solr-{{ solr_version }}.tgz"
+          dest: "{{ download_dir }}"
+          copy: no
+          creates: "{{ download_dir }}/solr-{{ solr_version }}/README.txt"
+
+     - name: Run SOlr INstallation script
+       shell: >
+          {{ download_dir }}/solr-{{ solr_version }}/bin/install_solr_service.sh
+          {{ download_dir }}/solr-{{ solr_version }}.tgz 
+          -i /opt
+          -d /var/solr
+          -u solr
+          -s solr
+          -p 8982
+          creates={{ solr_dir }}/bin/solr
+
+
+     - name: Ensur solr is started and enabled
+       service: name=solr state=started enabled=yes
